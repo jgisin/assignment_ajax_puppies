@@ -29,10 +29,13 @@ var getPuppy = function(puppy) {
 
 var getPuppies = function() {
   $('#puppy-list').html('');
+    addPendingStatus();
   $.get(getPuppiesURL, function(data) {
     data.forEach(function(puppy) {
       getPuppy(puppy);
       adoptPuppy(puppy);
+      successStatus();
+      setTimeout(fadeStatus, 2000);
     });
   });
 };
@@ -46,8 +49,14 @@ var adoptPuppy = function(puppy) {
             success: function() {
               console.log('Success!');
               getPuppies();
+              successStatus();
+              setTimeout(fadeStatus, 2000);
             },
-            error: function() {console.log('Error!');}
+            error: function(xhr, status, error) {
+              console.log('Error!');
+              addErrorStatus(error, puppy);
+              setTimeout(fadeStatus, 2000);
+            }
     });
 
   });
@@ -59,16 +68,15 @@ var registerPuppy = function(object) {
   $.ajax({
     type: 'POST',
     url: getPuppiesURL,
-    jsonp: 'callback',
     contentType: 'application/json',
-    dataType: 'json',
+    dataType: 'son',
     data: object,
     error: function(){
-      addErrorStatus();
+      addErrorStatus("Register Puppy Error", object);
     },
     success: function() {
       console.log('Puppy posted!');
-      removePendingStatus();
+      successStatus();
     }
   });
 };
@@ -80,19 +88,44 @@ var addPendingStatus = function() {
 
 var removePendingStatus = function(){
   $('#status').removeClass('alert alert-warning');
+  $('#status').removeClass('alert alert-danger');
   $('#status').text('');
 };
 
-var addErrorStatus = function(){
-  $('#status').removeClass('alert alert-warning');
-  $('#status').addClass('alert alert-danger');
-  $('#status').text('Error, No Puppies for you');
+var successStatus = function(){
+  removePendingStatus();
+  $('#status').show();
+  $('#status').addClass('alert alert-success');
+  $('#status').text('Loaded Successfully');
+  setTimeout(fadeStatus, 2000);
+};
+
+var fadeStatus = function(){
+  $('#status').fadeOut(1000);
+};
+
+var status = function(){
+  successStatus();
+};
+
+var addErrorStatus = function(error, puppy){
+  errorString = " ";
+    if(puppy !== undefined){
+      errorString += "problem with " + puppy.name;
+    }
+    $('#status').show();
+    removePendingStatus();
+    $('#status').addClass('alert alert-danger');
+    $('#status').text(error + errorString);
+    setTimeout(fadeStatus, 2000);
 };
 
 $(document).ready( function() {
+  addPendingStatus();
   $.get(getBreedURL, function(data) {
     data.forEach(function(breed) {
       getBreed(breed);
+      successStatus();
     });
   });
 
@@ -109,4 +142,8 @@ $(document).ready( function() {
     event.preventDefault();
     getPuppies();
   });
+});
+
+$( document ).on('ajaxError', function( ){
+  addErrorStatus("Ajax Error:");
 });
