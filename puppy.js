@@ -2,7 +2,7 @@
 var getBreedURL = "https://ajax-puppies.herokuapp.com/breeds.json";
 var getPuppiesURL = "https://ajax-puppies.herokuapp.com/puppies.json";
 var deletePuppyURL = function(puppy) {
-  return ("https://ajax-puppies.herokuapp.com/puppies/" + puppy.id + ".json")
+  return ("https://ajax-puppies.herokuapp.com/puppies/" + puppy.id + ".json");
 };
 
 
@@ -21,10 +21,10 @@ var getPuppy = function(puppy) {
   appendString += puppy.breed.name;
   appendString += '), created ';
   appendString += Math.floor((d - puppyCreated) / 60000);
-  appendString += ' minutes ago -- '
+  appendString += ' minutes ago -- ';
 
   $('#puppy-list').append(appendString);
-  $('#puppy-list').append('<a href="#" id="puppy-' + puppy.id + '"> --adopt-- </a>')
+  $('#puppy-list').append('<a href="#" id="puppy-' + puppy.id + '"> --adopt-- </a>');
 };
 
 var getPuppies = function() {
@@ -33,29 +33,29 @@ var getPuppies = function() {
     data.forEach(function(puppy) {
       getPuppy(puppy);
       adoptPuppy(puppy);
-    })
-  })
+    });
+  });
 };
 
 var adoptPuppy = function(puppy) {
   var currentPuppyID = '#puppy-' + puppy.id;
   $(currentPuppyID).on('click', function(event) {
     event.preventDefault();
-    $.ajax({type: 'DELETE', 
+    $.ajax({type: 'DELETE',
             url: deletePuppyURL(puppy),
             success: function() {
               console.log('Success!');
               getPuppies();
             },
-            error: function() {console.log('Error!')}
-    })
+            error: function() {console.log('Error!');}
+    });
 
-  })
-  
+  });
+
 };
 
 var registerPuppy = function(object) {
-
+  addPendingStatus();
   $.ajax({
     type: 'POST',
     url: getPuppiesURL,
@@ -63,14 +63,30 @@ var registerPuppy = function(object) {
     contentType: 'application/json',
     dataType: 'json',
     data: object,
+    error: function(){
+      addErrorStatus();
+    },
     success: function() {
       console.log('Puppy posted!');
+      removePendingStatus();
     }
-  })
+  });
 };
 
-var checkStatus = function(readyState) {
-  $('#status').on('progress');
+var addPendingStatus = function() {
+  $('#status').addClass('alert alert-warning');
+  $('#status').text('Loading...Please Wait');
+};
+
+var removePendingStatus = function(){
+  $('#status').removeClass('alert alert-warning');
+  $('#status').text('');
+};
+
+var addErrorStatus = function(){
+  $('#status').removeClass('alert alert-warning');
+  $('#status').addClass('alert alert-danger');
+  $('#status').text('Error, No Puppies for you');
 };
 
 $(document).ready( function() {
@@ -85,13 +101,12 @@ $(document).ready( function() {
     var name = $('#name-input').val();
     var breed = $('#breed-input').val();
     var object = {name: name,
-                  breed_id: breed}
+                  breed_id: breed};
     registerPuppy(JSON.stringify(object));
-  })
+  });
 
   $('#puppy-refresh').on('click', function(event) {
     event.preventDefault();
     getPuppies();
   });
 });
-
